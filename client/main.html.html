@@ -296,7 +296,7 @@
 <body>
     <div class="header">
         <div class="logo">CivicTrack</div>
-        <a href="login.html" class="login-btn">Login</a>
+        <a href="login.html.html" class="login-btn">Login</a>
     </div>
 
     <div class="filters">
@@ -319,18 +319,18 @@
         <div class="dropdown">
             <div class="dropdown-btn">Status</div>
             <div class="dropdown-content">
-                <div class="dropdown-item">🟠 Reported</div>
-                <div class="dropdown-item">🔵 In Progress</div>
-                <div class="dropdown-item">🟢 Resolved</div>
+                <div class="dropdown-item" data-status="Reported">🟠 Reported</div>
+                <div class="dropdown-item" data-status="In Progress">🔵 In Progress</div>
+                <div class="dropdown-item" data-status="Resolved">🟢 Resolved</div>
             </div>
         </div>
 
         <div class="dropdown">
             <div class="dropdown-btn">Distance</div>
             <div class="dropdown-content">
-                <div class="dropdown-item">1km</div>
-                <div class="dropdown-item">3km</div>
-                <div class="dropdown-item">5km</div>
+                <div class="dropdown-item" data-distance="1km">1km</div>
+                <div class="dropdown-item" data-distance="3km">3km</div>
+                <div class="dropdown-item" data-distance="5km">5km</div>
             </div>
         </div>
 
@@ -342,7 +342,7 @@
 
     <div class="issues-grid">
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Lighting issues">
+            <div class="issue-card" data-category="Lighting issues" data-status="In Progress" data-location="">
                 <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="status-badge status-progress">In Progress</div>
                 </div>
@@ -361,7 +361,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Roads">
+            <div class="issue-card" data-category="Roads" data-status="Reported" data-location="Mary Avenue">
                 <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
                     <div class="status-badge status-reported">Reported</div>
                     <div class="priority-indicator"></div>
@@ -382,7 +382,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Cleanliness issues">
+            <div class="issue-card" data-category="Cleanliness issues" data-status="Open" data-location="">
                 <div class="issue-image" style="background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%);">
                     <div class="status-badge status-open">Open</div>
                 </div>
@@ -401,7 +401,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Lighting issues">
+            <div class="issue-card" data-category="Lighting issues" data-status="Reported" data-location="Mary Avenue">
                 <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="status-badge status-reported">Reported</div>
                 </div>
@@ -421,7 +421,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Roads">
+            <div class="issue-card" data-category="Roads" data-status="Reported" data-location="">
                 <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
                     <div class="status-badge status-reported">Reported</div>
                     <div class="priority-indicator"></div>
@@ -441,7 +441,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Cleanliness issues">
+            <div class="issue-card" data-category="Cleanliness issues" data-status="Open" data-location="">
                 <div class="issue-image" style="background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%);">
                     <div class="status-badge status-open">Open</div>
                 </div>
@@ -460,7 +460,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Cleanliness issues">
+            <div class="issue-card" data-category="Cleanliness issues" data-status="In Progress" data-location="Bonl Avenue">
                 <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="status-badge status-progress">In Progress</div>
                 </div>
@@ -479,7 +479,7 @@
         </a>
 
         <a href="https://example.com" class="issue-card-link">
-            <div class="issue-card" data-category="Cleanliness issues">
+            <div class="issue-card" data-category="Cleanliness issues" data-status="Open" data-location="Kohl Avenue">
                 <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
                     <div class="status-badge status-open">Open</div>
                 </div>
@@ -500,8 +500,11 @@
     </div>
 
     <script>
-        // Track selected categories
+        // Track selected filters
         let selectedCategories = [];
+        let selectedStatuses = [];
+        let selectedDistances = [];
+        let dropdownTimeout;
 
         // Category dropdown functionality
         document.querySelectorAll('.dropdown-item[data-category]').forEach(item => {
@@ -531,17 +534,85 @@
             });
         });
 
-        // Status and Distance dropdown functionality (unchanged)
-        document.querySelectorAll('.dropdown-item:not([data-category])').forEach(item => {
+        // Status dropdown functionality
+        document.querySelectorAll('.dropdown-item[data-status]').forEach(item => {
             item.addEventListener('click', function() {
+                const status = this.getAttribute('data-status');
                 const dropdown = this.closest('.dropdown');
                 const btn = dropdown.querySelector('.dropdown-btn');
-                btn.textContent = this.textContent;
-                dropdown.querySelector('.dropdown-content').style.display = 'none';
+
+                // Toggle selection
+                if (selectedStatuses.includes(status)) {
+                    selectedStatuses = selectedStatuses.filter(s => s !== status);
+                    this.classList.remove('selected');
+                } else {
+                    selectedStatuses.push(status);
+                    this.classList.add('selected');
+                }
+
+                // Update dropdown button text
+                if (selectedStatuses.length === 0) {
+                    btn.textContent = 'Status';
+                } else {
+                    btn.textContent = selectedStatuses.length === 1 ? selectedStatuses[0] : `${selectedStatuses.length} Statuses`;
+                }
+
+                // Filter issue cards
+                filterIssues();
             });
         });
 
-        // Search functionality (unchanged)
+        // Distance dropdown functionality
+        document.querySelectorAll('.dropdown-item[data-distance]').forEach(item => {
+            item.addEventListener('click', function() {
+                const distance = this.getAttribute('data-distance');
+                const dropdown = this.closest('.dropdown');
+                const btn = dropdown.querySelector('.dropdown-btn');
+
+                // Toggle selection
+                if (selectedDistances.includes(distance)) {
+                    selectedDistances = selectedDistances.filter(d => d !== distance);
+                    this.classList.remove('selected');
+                } else {
+                    selectedDistances.push(distance);
+                    this.classList.add('selected');
+                }
+
+                // Update dropdown button text
+                if (selectedDistances.length === 0) {
+                    btn.textContent = 'Distance';
+                } else {
+                    btn.textContent = selectedDistances.length === 1 ? selectedDistances[0] : `${selectedDistances.length} Distances`;
+                }
+
+                // Filter issue cards
+                filterIssues();
+            });
+        });
+
+        // Dropdown timeout functionality
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const content = dropdown.querySelector('.dropdown-content');
+            dropdown.addEventListener('mouseenter', () => {
+                clearTimeout(dropdownTimeout);
+                content.style.display = 'block';
+            });
+            dropdown.addEventListener('mouseleave', () => {
+                dropdownTimeout = setTimeout(() => {
+                    content.style.display = 'none';
+                }, 50); // 5 seconds delay
+            });
+            content.addEventListener('mouseenter', () => {
+                clearTimeout(dropdownTimeout);
+            });
+            content.addEventListener('mouseleave', () => {
+                dropdownTimeout = setTimeout(() => {
+                    content.style.display = 'none';
+                }, 5000); // 5 seconds delay
+            });
+        });
+
+        // Search functionality
         const searchInput = document.querySelector('.search-input');
         const issueCards = document.querySelectorAll('.issue-card');
 
@@ -549,7 +620,7 @@
             filterIssues();
         });
 
-        // Close dropdowns when clicking outside (unchanged)
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.dropdown')) {
                 document.querySelectorAll('.dropdown-content').forEach(content => {
@@ -558,7 +629,7 @@
             }
         });
 
-        // Filter issues based on category and search
+        // Filter issues based on category, status, distance, and search
         function filterIssues() {
             const searchTerm = searchInput.value.toLowerCase();
 
@@ -566,11 +637,17 @@
                 const title = card.querySelector('.issue-title').textContent.toLowerCase();
                 const description = card.querySelector('.issue-description').textContent.toLowerCase();
                 const category = card.getAttribute('data-category');
+                const status = card.getAttribute('data-status');
+                const location = card.getAttribute('data-location').toLowerCase();
                 
-                const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+                const matchesSearch = title.includes(searchTerm) || 
+                                    description.includes(searchTerm) || 
+                                    location.includes(searchTerm);
                 const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(category);
+                const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(status);
+                const matchesDistance = selectedDistances.length === 0; // Note: Distance filtering not implemented in data
                 
-                card.parentElement.style.display = matchesSearch && matchesCategory ? 'block' : 'none';
+                card.parentElement.style.display = matchesSearch && matchesCategory && matchesStatus && matchesDistance ? 'block' : 'none';
             });
         }
     </script>

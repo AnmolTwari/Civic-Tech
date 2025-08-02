@@ -37,7 +37,8 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><!DOCTYPE html>
+</script>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -114,12 +115,60 @@
         }
 
         .profile-btn::before {
-            content: "👤";
+            content: "";
             font-size: 1.2rem;
         }
 
         .profile-btn:hover {
             background: #2a4d7a;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .profile-dropdown:hover .profile-dropdown-content {
+            display: block;
+        }
+
+        .profile-dropdown-item {
+            padding: 0rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .profile-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-dropdown-item:hover {
+            background: #f8f9ff;
+            color: #2c5282;
+        }
+
+        .profile-pic {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.5rem;
         }
 
         .filters {
@@ -352,7 +401,16 @@
         <div class="header-buttons">
             <button class="header-btn">My Issues</button>
             <button class="header-btn">Report New Issue</button>
-            <button class="profile-btn">Profile</button>
+            <div class="profile-dropdown">
+                <button class="profile-btn"><img id="profilePic" class="profile-pic" src="https://via.placeholder.com/32" alt="Profile Picture"> Profile</button>
+                <div class="profile-dropdown-content">
+                    <label class="profile-dropdown-item">
+                        Upload Profile Picture
+                        <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                    </label>
+                    <a href="https://example.com" class="profile-dropdown-item">Other Changes</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -541,7 +599,41 @@
     </div>
 
     <script>
-        // Add interactive functionality
+        // Add interactive functionality for dropdowns
+        const dropdowns = document.querySelectorAll('.dropdown, .profile-dropdown');
+        const dropdownTimeoutDuration = 50; // 3 seconds timeout
+
+        dropdowns.forEach(dropdown => {
+            let timeoutId = null;
+            const content = dropdown.querySelector('.dropdown-content, .profile-dropdown-content');
+
+            // Show dropdown on hover
+            dropdown.addEventListener('mouseenter', () => {
+                clearTimeout(timeoutId);
+                content.style.display = 'block';
+            });
+
+            // Set timeout to hide dropdown after leaving
+            dropdown.addEventListener('mouseleave', () => {
+                timeoutId = setTimeout(() => {
+                    content.style.display = 'none';
+                }, dropdownTimeoutDuration);
+            });
+
+            // Keep dropdown open if user re-enters before timeout
+            content.addEventListener('mouseenter', () => {
+                clearTimeout(timeoutId);
+            });
+
+            // Hide dropdown after leaving content
+            content.addEventListener('mouseleave', () => {
+                timeoutId = setTimeout(() => {
+                    content.style.display = 'none';
+                }, dropdownTimeoutDuration);
+            });
+        });
+
+        // Dropdown item selection
         document.querySelectorAll('.dropdown-item').forEach(item => {
             item.addEventListener('click', function() {
                 const dropdown = this.closest('.dropdown');
@@ -572,10 +664,25 @@
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-content').forEach(content => {
+            if (!e.target.closest('.dropdown') && !e.target.closest('.profile-dropdown')) {
+                document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(content => {
                     content.style.display = 'none';
                 });
+            }
+        });
+
+        // Profile picture upload functionality
+        const profilePicInput = document.getElementById('profilePicInput');
+        const profilePic = document.getElementById('profilePic');
+
+        profilePicInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePic.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         });
     </script>
