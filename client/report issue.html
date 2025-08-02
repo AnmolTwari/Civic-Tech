@@ -22,6 +22,8 @@
         .dropdown-content {display:none;position:absolute;background:white;width:100%;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:8px;z-index:1000;top:100%;left:0;margin-top:4px;border:1px solid #ddd;}
         .dropdown-item {padding:.75rem 1rem;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:.9rem;}
         .dropdown-item:hover {background:#f8f9ff;color:#2c5282;}
+        .dropdown-item.selected {background:#f8f9ff;color:#2c5282;font-weight:600;}
+        .dropdown-item:last-child {border-bottom:none;}
         .input-field {width:100%;padding:.75rem;border:1px solid #ddd;border-radius:8px;font-size:.95rem;}
         .submit-btn {background:#6b46c1;color:white;padding:.75rem 2rem;border:none;border-radius:8px;font-weight:500;cursor:pointer;width:100%;}
         .submit-btn:hover {background:#5a38a4;}
@@ -45,7 +47,23 @@
             <div id="leafletMap"></div>
         </div>
     </div>
-    <div class="form-group"><div class="dropdown"><div class="dropdown-btn">Category</div><div class="dropdown-content">🛣️ Roads<br>💡 Lighting issues</div></div></div>
+    <div class="form-group">
+        <div class="dropdown">
+            <div class="dropdown-btn">Category 🔽</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item" data-category="Roads">🛣️ Roads</div>
+                <div class="dropdown-item" data-category="Lighting issues">💡 Lighting issues</div>
+                <div class="dropdown-item" data-category="Water Supply issues">🚰 Water Supply issues</div>
+                <div class="dropdown-item" data-category="Cleanliness issues">🧼 Cleanliness issues</div>
+                <div class="dropdown-item" data-category="Public Safety issues">🛑 Public Safety issues</div>
+                <div class="dropdown-item" data-category="Obstructions issues">🚧 Obstructions issues</div>
+                <div class="dropdown-item" data-category="Sidewalks issues">🚶 Sidewalks issues</div>
+                <div class="dropdown-item" data-category="Noise issues">🔊 Noise issues</div>
+                <div class="dropdown-item" data-category="Illegal Structures issues">🏗️ Illegal Structures issues</div>
+                <div class="dropdown-item" data-category="Stray Animals issues">🐕 Stray Animals issues</div>
+            </div>
+        </div>
+    </div>
     <div class="form-group"><input type="text" class="input-field" placeholder="Description" required></div>
     <div class="form-group"><label><input type="checkbox"> Report Anonymous</label></div>
     <div class="form-group"><button class="submit-btn" onclick="submitForm()">Submit Issue</button></div>
@@ -53,25 +71,25 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // ✅ Photo Upload - button trigger
-const photoBox=document.getElementById('photoBox');
-const photoInput=document.getElementById('photoInput');
-const photoStatus=document.getElementById('photoStatus');
-let uploadedImages=[];
-photoBox.addEventListener('click',()=>photoInput.click());
-photoInput.addEventListener('change',()=>{
-    uploadedImages=[...uploadedImages,...photoInput.files].slice(0,5);
+const photoBox = document.getElementById('photoBox');
+const photoInput = document.getElementById('photoInput');
+const photoStatus = document.getElementById('photoStatus');
+let uploadedImages = [];
+photoBox.addEventListener('click', () => photoInput.click());
+photoInput.addEventListener('change', () => {
+    uploadedImages = [...uploadedImages, ...photoInput.files].slice(0, 5);
     renderThumbnails();
 });
-function renderThumbnails(){
-    photoBox.innerHTML='';
-    uploadedImages.forEach(file=>{
-        let img=document.createElement('img');
-        img.className='thumbnail';
-        img.src=URL.createObjectURL(file);
+function renderThumbnails() {
+    photoBox.innerHTML = '';
+    uploadedImages.forEach(file => {
+        let img = document.createElement('img');
+        img.className = 'thumbnail';
+        img.src = URL.createObjectURL(file);
         photoBox.appendChild(img);
     });
     photoBox.appendChild(document.createTextNode('Click to add more photos'));
-    photoStatus.textContent=`${uploadedImages.length} image${uploadedImages.length!==1?'s':''} uploaded`;
+    photoStatus.textContent = `${uploadedImages.length} image${uploadedImages.length !== 1 ? 's' : ''} uploaded`;
 }
 
 // ✅ Leaflet Map Default Display + Location Selection
@@ -101,7 +119,61 @@ function getLocation(force=false){
         },{enableHighAccuracy:true,timeout:10000});
     }
 }
-function submitForm(){alert('Form submitted!');}
+
+
+// ✅ Category dropdown functionality
+let selectedCategories = [];
+document.querySelectorAll('.dropdown-item[data-category]').forEach(item => {
+    item.addEventListener('click', function() {
+        const category = this.getAttribute('data-category');
+        const dropdown = this.closest('.dropdown');
+        const btn = dropdown.querySelector('.dropdown-btn');
+        const content = dropdown.querySelector('.dropdown-content');
+
+        // Toggle selection
+        if (selectedCategories.includes(category)) {
+            selectedCategories = selectedCategories.filter(c => c !== category);
+            this.classList.remove('selected');
+        } else {
+            selectedCategories.push(category);
+            this.classList.add('selected');
+        }
+
+        // Update dropdown button text
+        if (selectedCategories.length === 0) {
+            btn.textContent = 'Category 🔽';
+        } else {
+            btn.textContent = selectedCategories.length === 1 ? `${selectedCategories[0]} 🔽` : `${selectedCategories.length} Categories 🔽`;
+        }
+
+        // Close dropdown after selection
+        content.style.display = 'none';
+    });
+});
+
+// ✅ Dropdown click functionality
+document.querySelectorAll('.dropdown').forEach(dropdown => {
+    const content = dropdown.querySelector('.dropdown-content');
+    dropdown.querySelector('.dropdown-btn').addEventListener('click', () => {
+        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    });
+});
+
+// ✅ Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-content').forEach(content => {
+            content.style.display = 'none';
+        });
+    }
+});
+
+// ✅ Submit form with popup and redirect
+function submitForm() {
+    if (confirm('Report submitted! Click OK to go to your user page.')) {
+        window.location.href = 'user page.html';
+    }
+}
 </script>
 </body>
 </html>
