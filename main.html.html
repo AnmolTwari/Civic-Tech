@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicTrack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5282;
+        }
+
+        .logo::before {
+            content: "📍";
+            font-size: 1.8rem;
+        }
+
+        .login-btn {
+            background: #2c5282;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover {
+            background: #2a4d7a;
+        }
+
+        .filters {
+            padding: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 150px;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            border-color: #2c5282;
+        }
+
+        .dropdown-btn::after {
+            content: "▼";
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9ff;
+            color: #2c5282;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .issues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        .issue-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .issue-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .issue-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+        }
+
+        .status-reported {
+            background: #f56565;
+        }
+
+        .status-progress {
+            background: #ed8936;
+        }
+
+        .status-open {
+            background: #48bb78;
+        }
+
+        .priority-indicator {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 12px solid #e53e3e;
+        }
+
+        .issue-content {
+            padding: 1.25rem;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+
+        .issue-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .issue-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .issue-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .action-icon {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .action-text {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .time-indicator {
+            color: #e53e3e;
+            font-weight: 500;
+        }
+
+        .location-tag {
+            background: #f7fafc;
+            color: #2c5282;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CivicTrack</div>
+        <button class="login-btn">Login</button>
+    </div>
+
+    <div class="filters">
+        <div class="dropdown">
+            <div class="dropdown-btn">Category</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item">🛣️ Roads</div>
+                <div class="dropdown-item">💡 Lighting issues</div>
+                <div class="dropdown-item">🚰 Water Supply issues</div>
+                <div class="dropdown-item">🧼 Cleanliness issues</div>
+                <div class="dropdown-item">🛑 Public Safety issues</div>
+                <div class="dropdown-item">🚧 Obstructions issues</div>
+                <div class="dropdown-item">🚶 Sidewalks issues</div>
+                <div class="dropdown-item">🔊 Noise issues</div>
+                <div class="dropdown-item">🏗️ Illegal Structures issues</div>
+                <div class="dropdown-item">🐕 Stray Animals issues</div>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <div class="dropdown-btn">Status</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item">🟠 Reported</div>
+                <div class="dropdown-item">🔵 In Progress</div>
+                <div class="dropdown-item">🟢 Resolved</div>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <div class="dropdown-btn">Distance</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item">1km</div>
+                <div class="dropdown-item">3km</div>
+                <div class="dropdown-item">5km</div>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-icon">🔍</div>
+            <input type="text" class="search-input" placeholder="Search Issues...">
+        </div>
+    </div>
+
+    <div class="issues-grid">
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="status-badge status-progress">In Progress</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Streetlight not working</h3>
+                <p class="issue-description">Street last 2hr working week in cow</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit boys, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
+                <div class="status-badge status-reported">Reported</div>
+                <div class="priority-indicator"></div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Pothole on main road</h3>
+                <p class="issue-description">Deep pothole on road, previously an small tixad pothole, now a dangerous an</p>
+                <div class="issue-meta">
+                    <span class="location-tag">Mary Avenue</span>
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edo do τσιa, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%);">
+                <div class="status-badge status-open">Open</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not collected</h3>
+                <p class="issue-description">Garbage is not picked since a week, need to notify officials</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit report, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="status-badge status-reported">Reported</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Streetlight no working</h3>
+                <p class="issue-description">Don't Bay St last 2 days</p>
+                <div class="issue-meta">
+                    <span class="location-tag">Mary Avenue</span>
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit boys, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
+                <div class="status-badge status-reported">Reported</div>
+                <div class="priority-indicator"></div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Potfode on maly mey</h3>
+                <p class="issue-description">Reported, check egd ard Problog on long ar sewich road</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit, do τσιa, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%);">
+                <div class="status-badge status-open">Open</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not collected</h3>
+                <p class="issue-description">Garbage is not picked since a week need to notify officials</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit report, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="status-badge status-progress">In Progress</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not workind</h3>
+                <p class="issue-description">Bonl Avenue</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit boys, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
+                <div class="status-badge status-open">Open</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not collected</h3>
+                <p class="issue-description"></p>
+                <div class="issue-meta">
+                    <span class="location-tag">Kohl Avenue</span>
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit, do τσιd, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive functionality
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const dropdown = this.closest('.dropdown');
+                const btn = dropdown.querySelector('.dropdown-btn');
+                btn.textContent = this.textContent;
+                dropdown.querySelector('.dropdown-content').style.display = 'none';
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-input');
+        const issueCards = document.querySelectorAll('.issue-card');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            issueCards.forEach(card => {
+                const title = card.querySelector('.issue-title').textContent.toLowerCase();
+                const description = card.querySelector('.issue-description').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
