@@ -271,12 +271,11 @@
 <body>
     <div class="header">
         <div class="logo">CivicTrack</div>
-        <a href="login.html.html" class="home-btn">Home</a>
+        <a href="main.html" class="home-btn">Home</a>
     </div>
 
     <div class="main-container">
         <div class="login-card">
-            
             <form class="form-container">
                 <div class="form-group">
                     <label class="form-label" for="username">User Name</label>
@@ -305,7 +304,7 @@
                 </div>
 
                 <div class="register-text">
-                    Don't have an account? <a href="register.html.html" class="register-link">Register here</a>
+                    Don't have an account? <a href="register.html" class="register-link">Register here</a>
                 </div>
 
                 <button type="submit" class="login-btn">Login</button>
@@ -358,19 +357,6 @@
                     this.style.borderColor = '#e2e8f0';
                 }
             });
-        });
-
-        // Home button functionality
-        document.querySelector('.home-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            // Here you would redirect to the main page
-            alert('Redirecting to home page...');
-        });
-
-        // Register link functionality  
-        document.querySelector('.register-link').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('Redirecting to registration page...');
         });
     </script>
 </body>
