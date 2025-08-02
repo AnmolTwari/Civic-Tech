@@ -11,6 +11,8 @@ app.use(express.json());
 app.use(cors());
 app.use("/uploads", express.static("server/uploads"));
 app.use("/api/users", userRoutes);
+app.use(express.json());
+
 
 
 

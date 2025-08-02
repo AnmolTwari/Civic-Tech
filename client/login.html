@@ -271,7 +271,7 @@
 <body>
     <div class="header">
         <div class="logo">CivicTrack</div>
-        <a href="main.html" class="home-btn">Home</a>
+        <a href="login.html" class="home-btn">Home</a>
     </div>
 
     <div class="main-container">
@@ -313,27 +313,40 @@
     </div>
 
     <script>
-        // Add form validation and interactivity
         const form = document.querySelector('form');
         const inputs = document.querySelectorAll('.form-input');
-        
-        form.addEventListener('submit', function(e) {
+
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
-            if (username && password) {
-                // Add loading animation
-                const loginBtn = document.querySelector('.login-btn');
-                loginBtn.textContent = 'Logging in...';
-                loginBtn.style.background = '#38a169';
-                
-                // Simulate login process
-                setTimeout(() => {
-                    alert('Login successful! Redirecting to dashboard...');
-                    // Here you would typically redirect to the main dashboard
-                }, 1500);
+
+            if (!username || !password) {
+                return alert("Please enter both username and password.");
+            }
+
+            try {
+                const res = await fetch("http://localhost:5000/api/users/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert("Login successful!");
+                    localStorage.setItem("user", JSON.stringify(data.user));
+                    window.location.href = "user page.html";
+                } else {
+                    alert(data.error || "Login failed.");
+                }
+            } catch (err) {
+                console.error("Login error:", err);
+                alert("Something went wrong.");
             }
         });
 
