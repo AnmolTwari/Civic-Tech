@@ -486,16 +486,17 @@
         });
 
         // Home button functionality
-        document.querySelector('.home-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('Redirecting to home page...');
-        });
+document.querySelector('.home-btn').addEventListener('click', function() {
+    // No e.preventDefault(), so the href="main.html" will work
+    // Optionally keep the alert for user feedback
+    alert('Redirecting to home page...');
+});
 
-        // Login link functionality
-        document.querySelector('.login-link').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('Redirecting to login page...');
-        });
+// Login link functionality
+document.querySelector('.login-link').addEventListener('click', function() {
+    // No e.preventDefault(), so the href="login.html" will work
+    alert('Redirecting to login page...');
+});
 
         // Phone number formatting
         const phoneInput = document.getElementById('phone');
