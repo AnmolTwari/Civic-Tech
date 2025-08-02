@@ -7,6 +7,7 @@ const Issues = () => {
       <h1>Hello, React with JSX!</h1>
       <p>JSX makes it easy to write and manage UI components.</p>
       <p>hello</p>
+      <p>new anmol jsx</p>
       <button onClick={() => alert('Button clicked!')}>Click Me</button>
     </div>
   );
