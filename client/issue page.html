@@ -1,49 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CivicTrack</title>
+    <title>CivicTrack - Issues Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -53,43 +13,97 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            background: linear-gradient(135deg, #1f1b4d 0%, #101047 50%, #200a51 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         .header {
-            background: white;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             font-size: 1.5rem;
             font-weight: bold;
-            color: #2c5282;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
         }
 
-        .header-buttons {
-            display: flex;
-            gap: 0.5rem;
+        .logo::before {
+            content: "📍";
+            font-size: 1.8rem;
+            -webkit-text-fill-color: #6366f1;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
         }
 
-        .header-btn {
-            background: #2c5282;
+        .login-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
             padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        .header-btn:hover {
-            background: #2a4d7a;
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
         }
 
         .filters {
@@ -98,6 +112,14 @@
             gap: 1rem;
             align-items: center;
             flex-wrap: wrap;
+            background: rgba(30, 41, 59, 0.3);
+            margin: 1rem 2rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            position: relative;
+            z-index: 1000;
         }
 
         .dropdown {
@@ -106,8 +128,8 @@
         }
 
         .dropdown-btn {
-            background: white;
-            border: 1px solid #ddd;
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.3);
             padding: 0.75rem 1rem;
             border-radius: 8px;
             cursor: pointer;
@@ -117,31 +139,43 @@
             min-width: 150px;
             justify-content: space-between;
             font-size: 0.95rem;
-            transition: border-color 0.2s;
+            transition: all 0.3s ease;
+            color: #e2e8f0;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .dropdown-btn:hover {
-            border-color: #2c5282;
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
         }
 
         .dropdown-btn::after {
             content: "▼";
             font-size: 0.8rem;
-            color: #666;
+            color: #6366f1;
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown-btn:hover::after {
+            transform: rotate(180deg);
         }
 
         .dropdown-content {
             display: none;
             position: absolute;
-            background: white;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             min-width: 200px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            z-index: 1001;
             top: 100%;
             left: 0;
             margin-top: 4px;
-            border: 1px solid #ddd;
+            border: 1px solid rgba(99, 102, 241, 0.2);
             max-height: 300px;
             overflow-y: auto;
         }
@@ -153,15 +187,10 @@
         .dropdown-item {
             padding: 0.75rem 1rem;
             cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
             font-size: 0.9rem;
-        }
-
-        .dropdown-item.selected {
-            background: #f8f9ff;
-            color: #2c5282;
-            font-weight: 600;
+            color: #e2e8f0;
         }
 
         .dropdown-item:last-child {
@@ -169,95 +198,9 @@
         }
 
         .dropdown-item:hover {
-            background: #f8f9ff;
-            color: #2c5282;
-        }
-
-        .issue-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            width: 600px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-
-        .issue-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #2d3748;
-        }
-
-        .issue-image {
-            height: 150px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .status-badge {
-            position: absolute;
-            top: 0.75rem;
-            left: 0.75rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: white;
-            background: #ed8936;
-        }
-
-        .issue-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 0.75rem;
-        }
-
-        .issue-description {
-            color: #666;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            margin-bottom: 0.75rem;
-        }
-
-        .issue-history {
-            font-size: 0.8rem;
-            color: #999;
-        }
-
-        .location-map {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .map-placeholder {
-            width: 100px;
-            height: 100px;
-            background: #ddd;
-        }
-
-        .custom-map-container {
-            width: 100%;
-            height: 250px;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 30px;
-            background: #e9ecef;
-            position: relative;
-        }
-
-        .custom-map-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            transform: translateX(5px);
         }
 
         .search-container {
@@ -269,14 +212,25 @@
         .search-input {
             width: 100%;
             padding: 0.75rem 1rem 0.75rem 3rem;
-            border: 1px solid #ddd;
+            border: 1px solid rgba(99, 102, 241, 0.3);
             border-radius: 8px;
             font-size: 0.95rem;
-            background: white;
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .search-input::placeholder {
-            color: #999;
+            color: #94a3b8;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.1);
         }
 
         .search-icon {
@@ -284,241 +238,324 @@
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #666;
+            color: #6366f1;
             font-size: 1.1rem;
+        }
+
+        .issues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        .issue-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            position: relative;
+        }
+
+        .issue-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .issue-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .issue-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+
+        .issue-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            z-index: 1;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .status-reported {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-progress {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .status-open {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .priority-indicator {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 12px solid #ef4444;
+            z-index: 2;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .issue-content {
+            padding: 1.25rem;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #f1f5f9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .issue-description {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .issue-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .issue-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .action-icon {
+            color: #6366f1;
+            font-size: 0.9rem;
+        }
+
+        .action-text {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .time-indicator {
+            color: #ef4444;
+            font-weight: 500;
+        }
+
+        .location-tag {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+                margin: 1rem;
+            }
+            
+            .dropdown-btn {
+                min-width: auto;
+            }
+            
+            .search-container {
+                max-width: none;
+            }
+            
+            .issues-grid {
+                grid-template-columns: 1fr;
+                padding: 0 1rem 1rem 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .login-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Issue image background variants */
+        .issue-image-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+
+        .issue-image-dark {
+            background: linear-gradient(45deg, #1a1a1a 0%, #333 100%) !important;
+        }
+
+        .issue-image-green {
+            background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%) !important;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo">CivicTrack</div>
-        <div class="header-buttons">
-            <button class="header-btn">Edit</button>
-            <button class="header-btn">Delete</button>
-        </div>
+        <a href="login.html" class="login-btn">Login</a>
     </div>
 
     <div class="filters">
         <div class="dropdown">
-            <div class="dropdown-btn">Category</div>
+            <div class="dropdown-btn">Filter by Status <span></span></div>
             <div class="dropdown-content">
-                <div class="dropdown-item" data-category="Roads">🛣️ Roads</div>
-                <div class="dropdown-item" data-category="Lighting issues">💡 Lighting issues</div>
-                <div class="dropdown-item" data-category="Water Supply issues">🚰 Water Supply issues</div>
-                <div class="dropdown-item" data-category="Cleanliness issues">🧼 Cleanliness issues</div>
-                <div class="dropdown-item" data-category="Public Safety issues">🛑 Public Safety issues</div>
-                <div class="dropdown-item" data-category="Obstructions issues">🚧 Obstructions issues</div>
-                <div class="dropdown-item" data-category="Sidewalks issues">🚶 Sidewalks issues</div>
-                <div class="dropdown-item" data-category="Noise issues">🔊 Noise issues</div>
-                <div class="dropdown-item" data-category="Illegal Structures issues">🏗️ Illegal Structures issues</div>
-                <div class="dropdown-item" data-category="Stray Animals issues">🐕 Stray Animals issues</div>
+                <div class="dropdown-item">All</div>
+                <div class="dropdown-item">Open</div>
+                <div class="dropdown-item">In Progress</div>
+                <div class="dropdown-item">Reported</div>
             </div>
         </div>
         <div class="dropdown">
-            <div class="dropdown-btn">Status</div>
+            <div class="dropdown-btn">Filter by Category <span></div>
             <div class="dropdown-content">
-                <div class="dropdown-item" data-status="Reported">🟠 Reported</div>
-                <div class="dropdown-item" data-status="In Progress">🔵 In Progress</div>
-                <div class="dropdown-item" data-status="Resolved">🟢 Resolved</div>
+                <div class="dropdown-item">All</div>
+                <div class="dropdown-item">Roads</div>
+                <div class="dropdown-item">Utilities</div>
+                <div class="dropdown-item">Public Safety</div>
             </div>
         </div>
-        <div class="dropdown">
-            <div class="dropdown-btn">Distance</div>
-            <div class="dropdown-content">
-                <div class="dropdown-item" data-distance="1km">1km</div>
-                <div class="dropdown-item" data-distance="3km">3km</div>
-                <div class="dropdown-item" data-distance="5km">5km</div>
-            </div>
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="Search issues...">
         </div>
-        
     </div>
 
-    <div class="issue-card" data-category="Roads" data-status="In Progress" data-location="C.G road, Ahmedabad">
-        <div class="issue-image">
-            <div class="status-badge">In Progress</div>
-        </div>
-        <h3 class="issue-title">Pothole on main road</h3>
-        <div class="issue-meta">
-            <span>Status: In Progress</span>
-            <span>Reported by: Anonymous</span>
-        </div>
-        <div class="issue-description">
-            The main road in C.G road, Ahmedabad, is riddled with potholes, making it dangerous and difficult to travel on.
-        </div>
-        <div class="issue-meta">
-            <span>Jun 02, 2025 - 10:34 AM</span>
-            <div class="location-map">
-                <div class="custom-map-container">
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3282.9372291372815!2d-58.44724068477055!3d-34.60368468046001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM2JzEzLjMiUyA1OMKwMjYnNDMuNiJX!5e0!3m2!1sen!2sus!4v1588437353456!5m2!1sen!2sus"
-                        width="100%" height="250" frameborder="0" style="border:0;" allowfullscreen=""
-                        aria-hidden="false" tabindex="0" loading="lazy">
-                    </iframe>
+    <div class="issues-grid">
+        <div class="issue-card">
+            <div class="issue-image issue-image-purple"></div>
+            <div class="status-badge status-open">Open</div>
+            <div class="priority-indicator"></div>
+            <div class="issue-content">
+                <div class="issue-title">Pothole on Main Street</div>
+                <div class="issue-description">Large pothole causing traffic delays near the city center.</div>
+                <div class="issue-meta">
+                    <span class="location-tag">Downtown</span>
+                    <span class="time-indicator">Reported 2 days ago</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">👍</span>
+                    <span class="action-text">12 Upvotes</span>
+                    <span class="action-icon">💬</span>
+                    <span class="action-text">5 Comments</span>
                 </div>
             </div>
         </div>
-        <div class="issue-history">
-            Jun 02, 10:34 AM - Reported by user<br>
-            Jul 26, 04:19 PM - Marked In Progress
+        <div class="issue-card">
+            <div class="issue-image issue-image-green"></div>
+            <div class="status-badge status-progress">In Progress</div>
+            <div class="priority-indicator"></div>
+            <div class="issue-content">
+                <div class="issue-title">Broken Streetlight</div>
+                <div class="issue-description">Streetlight at Oak Avenue is non-functional, posing safety risks.</div>
+                <div class="issue-meta">
+                    <span class="location-tag">Oak Avenue</span>
+                    <span class="time-indicator">Reported 1 week ago</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">👍</span>
+                    <span class="action-text">8 Upvotes</span>
+                    <span class="action-icon">💬</span>
+                    <span class="action-text">3 Comments</span>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Track selected filters
-        let selectedCategories = [];
-        let selectedStatuses = [];
-        let selectedDistances = [];
-        let dropdownTimeout;
+        // Dropdown functionality
+        const dropdowns = document.querySelectorAll('.dropdown');
+        dropdowns.forEach(dropdown => {
+            const btn = dropdown.querySelector('.dropdown-btn');
+            const items = dropdown.querySelectorAll('.dropdown-item');
 
-        // Category dropdown functionality
-        document.querySelectorAll('.dropdown-item[data-category]').forEach(item => {
-            item.addEventListener('click', function() {
-                const category = this.getAttribute('data-category');
-                const dropdown = this.closest('.dropdown');
-                const btn = dropdown.querySelector('.dropdown-btn');
-
-                // Toggle selection
-                if (selectedCategories.includes(category)) {
-                    selectedCategories = selectedCategories.filter(c => c !== category);
-                    this.classList.remove('selected');
-                } else {
-                    selectedCategories.push(category);
-                    this.classList.add('selected');
-                }
-
-                // Update dropdown button text
-                if (selectedCategories.length === 0) {
-                    btn.textContent = 'Category';
-                } else {
-                    btn.textContent = selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} Categories`;
-                }
-
-                // Filter issue cards
-                filterIssues();
-            });
-        });
-
-        // Status dropdown functionality
-        document.querySelectorAll('.dropdown-item[data-status]').forEach(item => {
-            item.addEventListener('click', function() {
-                const status = this.getAttribute('data-status');
-                const dropdown = this.closest('.dropdown');
-                const btn = dropdown.querySelector('.dropdown-btn');
-
-                // Toggle selection
-                if (selectedStatuses.includes(status)) {
-                    selectedStatuses = selectedStatuses.filter(s => s !== status);
-                    this.classList.remove('selected');
-                } else {
-                    selectedStatuses.push(status);
-                    this.classList.add('selected');
-                }
-
-                // Update dropdown button text
-                if (selectedStatuses.length === 0) {
-                    btn.textContent = 'Status';
-                } else {
-                    btn.textContent = selectedStatuses.length === 1 ? selectedStatuses[0] : `${selectedStatuses.length} Statuses`;
-                }
-
-                // Filter issue cards
-                filterIssues();
-            });
-        });
-
-        // Distance dropdown functionality
-        document.querySelectorAll('.dropdown-item[data-distance]').forEach(item => {
-            item.addEventListener('click', function() {
-                const distance = this.getAttribute('data-distance');
-                const dropdown = this.closest('.dropdown');
-                const btn = dropdown.querySelector('.dropdown-btn');
-
-                // Toggle selection
-                if (selectedDistances.includes(distance)) {
-                    selectedDistances = selectedDistances.filter(d => d !== distance);
-                    this.classList.remove('selected');
-                } else {
-                    selectedDistances.push(distance);
-                    this.classList.add('selected');
-                }
-
-                // Update dropdown button text
-                if (selectedDistances.length === 0) {
-                    btn.textContent = 'Distance';
-                } else {
-                    btn.textContent = selectedDistances.length === 1 ? selectedDistances[0] : `${selectedDistances.length} Distances`;
-                }
-
-                // Filter issue cards
-                filterIssues();
-            });
-        });
-
-        // Dropdown timeout functionality
-        document.querySelectorAll('.dropdown').forEach(dropdown => {
-            const content = dropdown.querySelector('.dropdown-content');
-            dropdown.addEventListener('mouseenter', () => {
-                clearTimeout(dropdownTimeout);
-                content.style.display = 'block';
-            });
-            dropdown.addEventListener('mouseleave', () => {
-                dropdownTimeout = setTimeout(() => {
-                    content.style.display = 'none';
-                }, 50); // 5 seconds delay
-            });
-            content.addEventListener('mouseenter', () => {
-                clearTimeout(dropdownTimeout);
-            });
-            content.addEventListener('mouseleave', () => {
-                dropdownTimeout = setTimeout(() => {
-                    content.style.display = 'none';
-                }, 50); // 5 seconds delay
-            });
-            // Retain click functionality
-            dropdown.querySelector('.dropdown-btn').addEventListener('click', () => {
-                clearTimeout(dropdownTimeout);
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
-            });
-        });
-
-        // Search functionality
-        const searchInput = document.querySelector('.search-input');
-        const issueCards = document.querySelectorAll('.issue-card');
-
-        searchInput.addEventListener('input', function() {
-            filterIssues();
-        });
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-content').forEach(content => {
-                    content.style.display = 'none';
+            items.forEach(item => {
+                item.addEventListener('click', function() {
+                    btn.firstChild.textContent = this.textContent;
+                    alert(`Filtering by ${this.textContent}`);
                 });
+            });
+        });
+
+        // Search input functionality
+        const searchInput = document.querySelector('.search-input');
+        searchInput.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                this.style.borderColor = '#6366f1';
+            } else {
+                this.style.borderColor = 'rgba(99, 102, 241, 0.3)';
             }
         });
 
-        // Filter issues based on category, status, distance, and search
-        function filterIssues() {
-            const searchTerm = searchInput.value.toLowerCase();
+        searchInput.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateY(-2px)';
+        });
 
-            issueCards.forEach(card => {
-                const title = card.querySelector('.issue-title').textContent.toLowerCase();
-                const description = card.querySelector('.issue-description').textContent.toLowerCase();
-                const category = card.getAttribute('data-category');
-                const status = card.getAttribute('data-status');
-                const location = card.getAttribute('data-location').toLowerCase();
-                
-                const matchesSearch = title.includes(searchTerm) || 
-                                    description.includes(searchTerm) || 
-                                    location.includes(searchTerm);
-                const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(category);
-                const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(status);
-                const matchesDistance = selectedDistances.length === 0; // Note: Distance filtering not implemented in data
-                
-                card.style.display = matchesSearch && matchesCategory && matchesStatus && matchesDistance ? 'block' : 'none';
-            });
-        }
+        searchInput.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'translateY(0px)';
+        });
+
+        // Login button functionality
+        document.querySelector('.login-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Redirecting to login page...');
+        });
     </script>
 </body>
 </html>
