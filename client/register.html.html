@@ -94,13 +94,13 @@
 
         .register-card {
             background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 2.25rem; /* Reduced from 3rem (3 * 0.75) */
+            border-radius: 15px; /* Reduced from 20px */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1); /* Adjusted shadow */
             width: 100%;
-            max-width: 450px;
+            max-width: 337.5px; /* Reduced from 450px (450 * 0.75) */
             position: relative;
-            border: 3px solid #2c5282;
+            border: 2px solid #2c5282; /* Reduced from 3px */
             animation: slideIn 0.6s ease-out;
         }
 
@@ -116,23 +116,23 @@
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.125rem; /* Reduced from 1.5rem */
         }
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.375rem; /* Reduced from 0.5rem */
             font-weight: 500;
             color: #2d3748;
-            font-size: 1rem;
+            font-size: 0.75rem; /* Reduced from 1rem */
         }
 
         .form-input {
             width: 100%;
-            padding: 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 1rem;
+            padding: 0.75rem; /* Reduced from 1rem */
+            border: 1.5px solid #e2e8f0; /* Reduced from 2px */
+            border-radius: 7.5px; /* Reduced from 10px */
+            font-size: 0.75rem; /* Reduced from 1rem */
             transition: all 0.3s ease;
             background: #f8f9fa;
         }
@@ -141,8 +141,8 @@
             outline: none;
             border-color: #2c5282;
             background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(44, 82, 130, 0.2);
+            transform: translateY(-1.5px); /* Reduced from -2px */
+            box-shadow: 0 3px 9px rgba(44, 82, 130, 0.2); /* Adjusted shadow */
         }
 
         .form-input::placeholder {
@@ -151,8 +151,8 @@
 
         .login-text {
             text-align: center;
-            margin: 1.5rem 0;
-            font-size: 0.9rem;
+            margin: 1.125rem 0; /* Reduced from 1.5rem */
+            font-size: 0.675rem; /* Reduced from 0.9rem */
             color: #666;
         }
 
@@ -172,16 +172,16 @@
             width: 100%;
             background: #48bb78;
             color: white;
-            padding: 1rem 2rem;
+            padding: 0.75rem 1.5rem; /* Reduced from 1rem 2rem */
             border: none;
-            border-radius: 25px;
-            font-size: 1.1rem;
+            border-radius: 18.75px; /* Reduced from 25px */
+            font-size: 0.825rem; /* Reduced from 1.1rem */
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 2px solid #48bb78;
+            letter-spacing: 0.75px; /* Reduced from 1px */
+            border: 1.5px solid #48bb78; /* Reduced from 2px */
             position: relative;
             overflow: hidden;
         }
@@ -204,22 +204,22 @@
         .register-btn:hover {
             background: #38a169;
             border-color: #38a169;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.4);
+            transform: translateY(-2.25px); /* Reduced from -3px */
+            box-shadow: 0 6px 15px rgba(72, 187, 120, 0.4); /* Adjusted shadow */
         }
 
         .register-btn:active {
-            transform: translateY(-1px);
+            transform: translateY(-0.75px); /* Reduced from -1px */
         }
 
         .decorative-line {
             position: absolute;
-            top: -20px;
-            left: -20px;
-            width: 100px;
-            height: 3px;
+            top: -15px; /* Reduced from -20px */
+            left: -15px; /* Reduced from -20px */
+            width: 75px; /* Reduced from 100px */
+            height: 2.25px; /* Reduced from 3px */
             background: linear-gradient(45deg, #48bb78, #38a169);
-            border-radius: 2px;
+            border-radius: 1.5px; /* Reduced from 2px */
             transform: rotate(45deg);
         }
 
@@ -229,22 +229,22 @@
 
         @media (max-width: 768px) {
             .register-card {
-                margin: 1rem;
-                padding: 2rem;
-                border-radius: 15px;
+                margin: 0.75rem; /* Reduced from 1rem */
+                padding: 1.5rem; /* Reduced from 2rem */
+                border-radius: 11.25px; /* Reduced from 15px */
             }
             
             .header {
-                padding: 1rem;
+                padding: 0.75rem; /* Reduced from 1rem */
             }
             
             .logo {
-                font-size: 1.3rem;
+                font-size: 1.125rem; /* Reduced from 1.3rem */
             }
             
             .home-btn {
-                padding: 0.6rem 1.5rem;
-                font-size: 0.9rem;
+                padding: 0.45rem 1.125rem; /* Reduced from 0.6rem 1.5rem */
+                font-size: 0.675rem; /* Reduced from 0.9rem */
             }
         }
 
@@ -255,29 +255,29 @@
         .input-icon::before {
             content: attr(data-icon);
             position: absolute;
-            left: 15px;
+            left: 11.25px; /* Reduced from 15px */
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.2rem;
+            font-size: 0.9rem; /* Reduced from 1.2rem */
             z-index: 1;
             color: #666;
         }
 
         .input-icon .form-input {
-            padding-left: 3rem;
+            padding-left: 2.25rem; /* Reduced from 3rem */
         }
 
         .password-strength {
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
+            margin-top: 0.375rem; /* Reduced from 0.5rem */
+            font-size: 0.6rem; /* Reduced from 0.8rem */
             color: #666;
         }
 
         .strength-indicator {
-            height: 3px;
+            height: 2.25px; /* Reduced from 3px */
             background: #e2e8f0;
-            border-radius: 2px;
-            margin-top: 0.25rem;
+            border-radius: 1.5px; /* Reduced from 2px */
+            margin-top: 0.1875rem; /* Reduced from 0.25rem */
             overflow: hidden;
         }
 
@@ -285,7 +285,7 @@
             height: 100%;
             width: 0%;
             transition: all 0.3s ease;
-            border-radius: 2px;
+            border-radius: 1.5px; /* Reduced from 2px */
         }
 
         .strength-weak { background: #f56565; width: 33%; }
@@ -301,16 +301,30 @@
 
     <div class="main-container">
         <div class="register-card">
-            
-            <form class="form-container">
+            <form id="registerForm" class="form-container" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="fullName">Full Name</label>
+                    <div class="input-icon" data-icon="👤">
+                        <input 
+                            name="fullName" 
+                            type="text" 
+                            id="fullName" 
+                            class="form-input" 
+                            placeholder="Full Name"
+                            required
+                        >
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label" for="username">User Name</label>
                     <div class="input-icon" data-icon="👤">
                         <input 
+                            name="username" 
                             type="text" 
                             id="username" 
                             class="form-input" 
-                            placeholder="Choose a username"
+                            placeholder="Username"
                             required
                         >
                     </div>
@@ -320,10 +334,11 @@
                     <label class="form-label" for="email">Email</label>
                     <div class="input-icon" data-icon="📧">
                         <input 
+                            name="email" 
                             type="email" 
                             id="email" 
                             class="form-input" 
-                            placeholder="Enter your email address"
+                            placeholder="Email"
                             required
                         >
                     </div>
@@ -333,10 +348,11 @@
                     <label class="form-label" for="phone">Phone</label>
                     <div class="input-icon" data-icon="📱">
                         <input 
-                            type="tel" 
+                            name="phone" 
+                            type="text" 
                             id="phone" 
                             class="form-input" 
-                            placeholder="Enter your phone number"
+                            placeholder="Phone Number"
                             required
                         >
                     </div>
@@ -346,10 +362,11 @@
                     <label class="form-label" for="password">Password</label>
                     <div class="input-icon" data-icon="🔒">
                         <input 
+                            name="password" 
                             type="password" 
                             id="password" 
                             class="form-input" 
-                            placeholder="Create a strong password"
+                            placeholder="Password"
                             required
                         >
                     </div>
@@ -359,6 +376,16 @@
                         </div>
                         <span id="strengthText">Password strength</span>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="profilePic">Profile Picture</label>
+                    <input 
+                        name="profilePic" 
+                        type="file" 
+                        id="profilePic" 
+                        class="form-input"
+                    >
                 </div>
 
                 <div class="login-text">
@@ -410,51 +437,36 @@
             checkPasswordStrength(this.value);
         });
 
-        // Form validation and submission
-        const form = document.querySelector('form');
-        const inputs = document.querySelectorAll('.form-input');
-        
-        form.addEventListener('submit', function(e) {
+        // Form submission
+        document.getElementById("registerForm").addEventListener("submit", async function(e) {
             e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const password = document.getElementById('password').value;
-            
-            // Basic validation
-            if (username && email && phone && password) {
-                if (password.length < 6) {
-                    alert('Password must be at least 6 characters long!');
-                    return;
+            const form = e.target;
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch("http://localhost:5000/api/users/register", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Registered successfully!");
+                    localStorage.setItem("user", JSON.stringify(data.user));
+                    window.location.href = "user page.html";
+                } else {
+                    alert("Error: " + data.error);
                 }
-                
-                // Email validation
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    alert('Please enter a valid email address!');
-                    return;
-                }
-                
-                // Add loading animation
-                const registerBtn = document.querySelector('.register-btn');
-                registerBtn.textContent = 'Creating Account...';
-                registerBtn.style.background = '#38a169';
-                
-                // Simulate registration process
-                setTimeout(() => {
-                    alert('Registration successful! Welcome to CivicTrack!');
-                    // Here you would typically redirect to login or dashboard
-                }, 2000);
-            } else {
-                alert('Please fill in all fields!');
+            } catch (err) {
+                console.error("Fetch error:", err);
+                alert("Something went wrong: " + err.message);
             }
         });
 
         // Add floating animation to inputs on focus
+        const inputs = document.querySelectorAll('.form-input');
         inputs.forEach(input => {
             input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'translateY(-2px)';
+                this.parentElement.style.transform = 'translateY(-1.5px)';
             });
             
             input.addEventListener('blur', function() {
