@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicTrack - Report New Issue</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;}
+        body {font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;color:#333;}
+        .header {background:white;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+        .logo {font-size:1.5rem;font-weight:bold;color:#2c5282;}
+        .logo-image {width:50px;height:50px;background:#f0f0f0;border-radius:8px;}
+        .container {padding:2rem;max-width:500px;margin:0 auto;}
+        .form-group {margin-bottom:1.5rem;}
+        .photo-upload {min-height:150px;background:#f0f0f0;border:2px dashed #2c5282;border-radius:20px;padding:10px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;text-align:center;cursor:pointer;position:relative;}
+        .thumbnail {width:70px;height:70px;border-radius:8px;object-fit:cover;border:1px solid #ddd;}
+        .map-section {height:300px;background:#ddd;margin-bottom:1rem;border-radius:8px;overflow:hidden;position:relative;}
+        #leafletMap {width:100%;height:100%;}
+        .dropdown {position:relative;display:inline-block;width:100%;}
+        .dropdown-btn {background:white;border:1px solid #ddd;padding:.75rem 1rem;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:.95rem;}
+        .dropdown-content {display:none;position:absolute;background:white;width:100%;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:8px;z-index:1000;top:100%;left:0;margin-top:4px;border:1px solid #ddd;}
+        .dropdown-item {padding:.75rem 1rem;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:.9rem;}
+        .dropdown-item:hover {background:#f8f9ff;color:#2c5282;}
+        .dropdown-item.selected {background:#f8f9ff;color:#2c5282;font-weight:600;}
+        .dropdown-item:last-child {border-bottom:none;}
+        .input-field {width:100%;padding:.75rem;border:1px solid #ddd;border-radius:8px;font-size:.95rem;}
+        .submit-btn {background:#6b46c1;color:white;padding:.75rem 2rem;border:none;border-radius:8px;font-weight:500;cursor:pointer;width:100%;}
+        .submit-btn:hover {background:#5a38a4;}
+    </style>
+</head>
+<body onload="getLocation()">
+<div class="header">
+    <img src="ChatGPT Image Aug 2, 2025, 11_42_36 AM.png" alt="Logo" class="logo-image">
+    <div class="logo">Report New Issue</div>
+</div>
+<div class="container">
+    <div class="form-group">
+        <div class="photo-upload" id="photoBox">Click to Upload Photos</div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+        <div class="photo-upload-status" id="photoStatus">0 images uploaded</div>
+    </div>
+    <div class="form-group">
+        <input type="text" id="locationInput" placeholder="Enter location (manual override)">
+        <button id="resetMapBtn" onclick="resetLocation()" style="margin:5px 0;padding:.5rem 1rem;background:#2c5282;color:white;border:none;border-radius:4px;cursor:pointer">Reset to My Location</button>
+        <div class="map-section" id="mapContainer">
+            <div id="leafletMap"></div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="dropdown">
+            <div class="dropdown-btn">Category 🔽</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item" data-category="Roads">🛣️ Roads</div>
+                <div class="dropdown-item" data-category="Lighting issues">💡 Lighting issues</div>
+                <div class="dropdown-item" data-category="Water Supply issues">🚰 Water Supply issues</div>
+                <div class="dropdown-item" data-category="Cleanliness issues">🧼 Cleanliness issues</div>
+                <div class="dropdown-item" data-category="Public Safety issues">🛑 Public Safety issues</div>
+                <div class="dropdown-item" data-category="Obstructions issues">🚧 Obstructions issues</div>
+                <div class="dropdown-item" data-category="Sidewalks issues">🚶 Sidewalks issues</div>
+                <div class="dropdown-item" data-category="Noise issues">🔊 Noise issues</div>
+                <div class="dropdown-item" data-category="Illegal Structures issues">🏗️ Illegal Structures issues</div>
+                <div class="dropdown-item" data-category="Stray Animals issues">🐕 Stray Animals issues</div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group"><input type="text" class="input-field" placeholder="Description" required></div>
+    <div class="form-group"><label><input type="checkbox"> Report Anonymous</label></div>
+    <div class="form-group"><button class="submit-btn" onclick="submitForm()">Submit Issue</button></div>
+</div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// ✅ Photo Upload - button trigger
+const photoBox = document.getElementById('photoBox');
+const photoInput = document.getElementById('photoInput');
+const photoStatus = document.getElementById('photoStatus');
+let uploadedImages = [];
+photoBox.addEventListener('click', () => photoInput.click());
+photoInput.addEventListener('change', () => {
+    uploadedImages = [...uploadedImages, ...photoInput.files].slice(0, 5);
+    renderThumbnails();
+});
+function renderThumbnails() {
+    photoBox.innerHTML = '';
+    uploadedImages.forEach(file => {
+        let img = document.createElement('img');
+        img.className = 'thumbnail';
+        img.src = URL.createObjectURL(file);
+        photoBox.appendChild(img);
+    });
+    photoBox.appendChild(document.createTextNode('Click to add more photos'));
+    photoStatus.textContent = `${uploadedImages.length} image${uploadedImages.length !== 1 ? 's' : ''} uploaded`;
+}
+
+// ✅ Leaflet Map Default Display + Location Selection
+let map=L.map('leafletMap').setView([20.5937,78.9629],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+let marker;
+map.on('click',e=>{
+    if(marker) marker.setLatLng(e.latlng); else marker=L.marker(e.latlng).addTo(map);
+    document.getElementById('locationInput').value=`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+});
+
+// ✅ Reset to Device GPS Location
+function resetLocation(){
+    getLocation(true);
+}
+
+// ✅ Auto Geolocation (with optional force refresh)
+function getLocation(force=false){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(pos=>{
+            map.setView([pos.coords.latitude,pos.coords.longitude],14);
+            if(marker) marker.setLatLng([pos.coords.latitude,pos.coords.longitude]);
+            else marker=L.marker([pos.coords.latitude,pos.coords.longitude]).addTo(map);
+            document.getElementById('locationInput').value=`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+        },err=>{
+            alert('Unable to access GPS. Please allow location permission.');
+        },{enableHighAccuracy:true,timeout:10000});
+    }
+}
+
+
+// ✅ Category dropdown functionality
+let selectedCategories = [];
+document.querySelectorAll('.dropdown-item[data-category]').forEach(item => {
+    item.addEventListener('click', function() {
+        const category = this.getAttribute('data-category');
+        const dropdown = this.closest('.dropdown');
+        const btn = dropdown.querySelector('.dropdown-btn');
+        const content = dropdown.querySelector('.dropdown-content');
+
+        // Toggle selection
+        if (selectedCategories.includes(category)) {
+            selectedCategories = selectedCategories.filter(c => c !== category);
+            this.classList.remove('selected');
+        } else {
+            selectedCategories.push(category);
+            this.classList.add('selected');
+        }
+
+        // Update dropdown button text
+        if (selectedCategories.length === 0) {
+            btn.textContent = 'Category 🔽';
+        } else {
+            btn.textContent = selectedCategories.length === 1 ? `${selectedCategories[0]} 🔽` : `${selectedCategories.length} Categories 🔽`;
+        }
+
+        // Close dropdown after selection
+        content.style.display = 'none';
+    });
+});
+
+// ✅ Dropdown click functionality
+document.querySelectorAll('.dropdown').forEach(dropdown => {
+    const content = dropdown.querySelector('.dropdown-content');
+    dropdown.querySelector('.dropdown-btn').addEventListener('click', () => {
+        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    });
+});
+
+// ✅ Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-content').forEach(content => {
+            content.style.display = 'none';
+        });
+    }
+});
+
+// ✅ Submit form with popup and redirect
+function submitForm() {
+    if (confirm('Report submitted! Click OK to go to your user page.')) {
+        window.location.href = 'user page.html';
+    }
+}
+</script>
+</body>
+</html>

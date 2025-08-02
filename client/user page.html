@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicTrack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5282;
+        }
+
+        .logo::before {
+            content: "📍";
+            font-size: 1.8rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: #2c5282;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .header-btn:hover {
+            background: #2a4d7a;
+        }
+
+        .profile-btn {
+            background: #2c5282;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .profile-btn::before {
+            content: "";
+            font-size: 1.2rem;
+        }
+
+        .profile-btn:hover {
+            background: #2a4d7a;
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .profile-dropdown:hover .profile-dropdown-content {
+            display: block;
+        }
+
+        .profile-dropdown-item {
+            padding: 0rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .profile-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-dropdown-item:hover {
+            background: #f8f9ff;
+            color: #2c5282;
+        }
+
+        .profile-pic {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.5rem;
+        }
+
+        .filters {
+            padding: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 150px;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            border-color: #2c5282;
+        }
+
+        .dropdown-btn::after {
+            content: "▼";
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9ff;
+            color: #2c5282;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .issues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        .issue-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .issue-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .issue-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+        }
+
+        .status-reported {
+            background: #f56565;
+        }
+
+        .status-progress {
+            background: #ed8936;
+        }
+
+        .status-open {
+            background: #48bb78;
+        }
+
+        .priority-indicator {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 12px solid #e53e3e;
+        }
+
+        .issue-content {
+            padding: 1.25rem;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+
+        .issue-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .issue-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .issue-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .action-icon {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .action-text {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .time-indicator {
+            color: #e53e3e;
+            font-weight: 500;
+        }
+
+        .location-tag {
+            background: #f7fafc;
+            color: #2c5282;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CivicTrack</div>
+        <div class="header-buttons">
+            <button class="header-btn" onclick="window.location.href='issue page.html'">My Issues</button>
+            <button class="header-btn" onclick="window.location.href='report issue.html'">Report New Issue</button>
+            <div class="profile-dropdown">
+                <button class="profile-btn"><img id="profilePic" class="profile-pic" src="https://via.placeholder.com/32" alt="Profile Picture"> Profile</button>
+                <div class="profile-dropdown-content">
+                    <h2 id="fullName"></h2>
+                    <p id="email"></p>
+                    <p id="phone"></p>
+                    <img id="profilePic" width="150" height="150" />
+                    <label class="profile-dropdown-item">
+                        Upload Profile Picture
+                        <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                    </label>
+                    <a href="https://example.com" class="profile-dropdown-item">Other Changes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="dropdown">
+            <div class="dropdown-btn">Category</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item">🛣️ Roads</div>
+                <div class="dropdown-item">💡 Lighting issues</div>
+                <div class="dropdown-item">🚰 Water Supply issues</div>
+                <div class="dropdown-item">🧼 Cleanliness issues</div>
+                <div class="dropdown-item">🛑 Public Safety issues</div>
+                <div class="dropdown-item">🚧 Obstructions issues</div>
+                <div class="dropdown-item">🚶 Sidewalks issues</div>
+                <div class="dropdown-item">🔊 Noise issues</div>
+                <div class="dropdown-item">🏗️ Illegal Structures issues</div>
+                <div class="dropdown-item">🐕 Stray Animals issues</div>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <div class="dropdown-btn">Status</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item">🟠 Reported</div>
+                <div class="dropdown-item">🔵 In Progress</div>
+                <div class="dropdown-item">🟢 Resolved</div>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <div class="dropdown-btn">Distance</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item">1km</div>
+                <div class="dropdown-item">3km</div>
+                <div class="dropdown-item">5km</div>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-icon">🔍</div>
+            <input type="text" class="search-input" placeholder="Search Issues...">
+        </div>
+    </div>
+
+    <div class="issues-grid">
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="status-badge status-progress">In Progress</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Streetlight not working</h3>
+                <p class="issue-description">Street last 2hr working week in cow</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit boys, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
+                <div class="status-badge status-reported">Reported</div>
+                <div class="priority-indicator"></div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Pothole on main road</h3>
+                <p class="issue-description">Deep pothole on road, previously an small tixad pothole, now a dangerous an</p>
+                <div class="issue-meta">
+                    <span class="location-tag">Mary Avenue</span>
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edo do τσιa, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%);">
+                <div class="status-badge status-open">Open</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not collected</h3>
+                <p class="issue-description">Garbage is not picked since a week, need to notify officials</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit report, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="status-badge status-reported">Reported</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Streetlight no working</h3>
+                <p class="issue-description">Don't Bay St last 2 days</p>
+                <div class="issue-meta">
+                    <span class="location-tag">Mary Avenue</span>
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit boys, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
+                <div class="status-badge status-reported">Reported</div>
+                <div class="priority-indicator"></div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Potfode on maly mey</h3>
+                <p class="issue-description">Reported, check egd ard Problog on long ar sewich road</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit, do τσιa, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #4CAF50 0%, #45a049 100%);">
+                <div class="status-badge status-open">Open</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not collected</h3>
+                <p class="issue-description">Garbage is not picked since a week need to notify officials</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit report, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="status-badge status-progress">In Progress</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not workind</h3>
+                <p class="issue-description">Bonl Avenue</p>
+                <div class="issue-meta">
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit boys, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="issue-card">
+            <div class="issue-image" style="background: linear-gradient(45deg, #1a1a1a 0%, #333 100%);">
+                <div class="status-badge status-open">Open</div>
+            </div>
+            <div class="issue-content">
+                <h3 class="issue-title">Garbage not collected</h3>
+                <p class="issue-description"></p>
+                <div class="issue-meta">
+                    <span class="location-tag">Kohl Avenue</span>
+                    <span class="time-indicator">2 hr</span>
+                </div>
+                <div class="issue-actions">
+                    <span class="action-icon">📝</span>
+                    <span class="action-text">Edit, do τσιd, sharedshaadproject</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+    </script>
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+          document.getElementById("fullName").textContent = user.fullName;
+          document.getElementById("email").textContent = user.email;
+          document.getElementById("phone").textContent = user.phone;
+          document.getElementById("profilePic").src = "http://localhost:5000/" + user.profilePic;
+        } else {
+          alert("No user info found!");
+        }
+    </script>
+    <script>
+        // Add interactive functionality for dropdowns
+        const dropdowns = document.querySelectorAll('.dropdown, .profile-dropdown');
+        const dropdownTimeoutDuration = 50; // 3 seconds timeout
+
+        dropdowns.forEach(dropdown => {
+            let timeoutId = null;
+            const content = dropdown.querySelector('.dropdown-content, .profile-dropdown-content');
+
+            // Show dropdown on hover
+            dropdown.addEventListener('mouseenter', () => {
+                clearTimeout(timeoutId);
+                content.style.display = 'block';
+            });
+
+            // Set timeout to hide dropdown after leaving
+            dropdown.addEventListener('mouseleave', () => {
+                timeoutId = setTimeout(() => {
+                    content.style.display = 'none';
+                }, dropdownTimeoutDuration);
+            });
+
+            // Keep dropdown open if user re-enters before timeout
+            content.addEventListener('mouseenter', () => {
+                clearTimeout(timeoutId);
+            });
+
+            // Hide dropdown after leaving content
+            content.addEventListener('mouseleave', () => {
+                timeoutId = setTimeout(() => {
+                    content.style.display = 'none';
+                }, dropdownTimeoutDuration);
+            });
+        });
+
+        // Dropdown item selection
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const dropdown = this.closest('.dropdown');
+                const btn = dropdown.querySelector('.dropdown-btn');
+                btn.textContent = this.textContent;
+                dropdown.querySelector('.dropdown-content').style.display = 'none';
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-input');
+        const issueCards = document.querySelectorAll('.issue-card');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            issueCards.forEach(card => {
+                const title = card.querySelector('.issue-title').textContent.toLowerCase();
+                const description = card.querySelector('.issue-description').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown') && !e.target.closest('.profile-dropdown')) {
+                document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+            }
+        });
+
+        // Profile picture upload functionality
+        const profilePicInput = document.getElementById('profilePicInput');
+        const profilePic = document.getElementById('profilePic');
+
+        profilePicInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePic.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

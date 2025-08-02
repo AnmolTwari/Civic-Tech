@@ -1,0 +1,524 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicTrack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5282;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: #2c5282;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .header-btn:hover {
+            background: #2a4d7a;
+        }
+
+        .filters {
+            padding: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 150px;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .dropdown-btn:hover {
+            border-color: #2c5282;
+        }
+
+        .dropdown-btn::after {
+            content: "▼";
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item.selected {
+            background: #f8f9ff;
+            color: #2c5282;
+            font-weight: 600;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9ff;
+            color: #2c5282;
+        }
+
+        .issue-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+
+        .issue-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+            background: #ed8936;
+        }
+
+        .issue-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.75rem;
+        }
+
+        .issue-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .issue-history {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .location-map {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .map-placeholder {
+            width: 100px;
+            height: 100px;
+            background: #ddd;
+        }
+
+        .custom-map-container {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            background: #e9ecef;
+            position: relative;
+        }
+
+        .custom-map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CivicTrack</div>
+        <div class="header-buttons">
+            <button class="header-btn">Edit</button>
+            <button class="header-btn">Delete</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="dropdown">
+            <div class="dropdown-btn">Category</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item" data-category="Roads">🛣️ Roads</div>
+                <div class="dropdown-item" data-category="Lighting issues">💡 Lighting issues</div>
+                <div class="dropdown-item" data-category="Water Supply issues">🚰 Water Supply issues</div>
+                <div class="dropdown-item" data-category="Cleanliness issues">🧼 Cleanliness issues</div>
+                <div class="dropdown-item" data-category="Public Safety issues">🛑 Public Safety issues</div>
+                <div class="dropdown-item" data-category="Obstructions issues">🚧 Obstructions issues</div>
+                <div class="dropdown-item" data-category="Sidewalks issues">🚶 Sidewalks issues</div>
+                <div class="dropdown-item" data-category="Noise issues">🔊 Noise issues</div>
+                <div class="dropdown-item" data-category="Illegal Structures issues">🏗️ Illegal Structures issues</div>
+                <div class="dropdown-item" data-category="Stray Animals issues">🐕 Stray Animals issues</div>
+            </div>
+        </div>
+        <div class="dropdown">
+            <div class="dropdown-btn">Status</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item" data-status="Reported">🟠 Reported</div>
+                <div class="dropdown-item" data-status="In Progress">🔵 In Progress</div>
+                <div class="dropdown-item" data-status="Resolved">🟢 Resolved</div>
+            </div>
+        </div>
+        <div class="dropdown">
+            <div class="dropdown-btn">Distance</div>
+            <div class="dropdown-content">
+                <div class="dropdown-item" data-distance="1km">1km</div>
+                <div class="dropdown-item" data-distance="3km">3km</div>
+                <div class="dropdown-item" data-distance="5km">5km</div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="issue-card" data-category="Roads" data-status="In Progress" data-location="C.G road, Ahmedabad">
+        <div class="issue-image">
+            <div class="status-badge">In Progress</div>
+        </div>
+        <h3 class="issue-title">Pothole on main road</h3>
+        <div class="issue-meta">
+            <span>Status: In Progress</span>
+            <span>Reported by: Anonymous</span>
+        </div>
+        <div class="issue-description">
+            The main road in C.G road, Ahmedabad, is riddled with potholes, making it dangerous and difficult to travel on.
+        </div>
+        <div class="issue-meta">
+            <span>Jun 02, 2025 - 10:34 AM</span>
+            <div class="location-map">
+                <div class="custom-map-container">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3282.9372291372815!2d-58.44724068477055!3d-34.60368468046001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDM2JzEzLjMiUyA1OMKwMjYnNDMuNiJX!5e0!3m2!1sen!2sus!4v1588437353456!5m2!1sen!2sus"
+                        width="100%" height="250" frameborder="0" style="border:0;" allowfullscreen=""
+                        aria-hidden="false" tabindex="0" loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+        <div class="issue-history">
+            Jun 02, 10:34 AM - Reported by user<br>
+            Jul 26, 04:19 PM - Marked In Progress
+        </div>
+    </div>
+
+    <script>
+        // Track selected filters
+        let selectedCategories = [];
+        let selectedStatuses = [];
+        let selectedDistances = [];
+        let dropdownTimeout;
+
+        // Category dropdown functionality
+        document.querySelectorAll('.dropdown-item[data-category]').forEach(item => {
+            item.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                const dropdown = this.closest('.dropdown');
+                const btn = dropdown.querySelector('.dropdown-btn');
+
+                // Toggle selection
+                if (selectedCategories.includes(category)) {
+                    selectedCategories = selectedCategories.filter(c => c !== category);
+                    this.classList.remove('selected');
+                } else {
+                    selectedCategories.push(category);
+                    this.classList.add('selected');
+                }
+
+                // Update dropdown button text
+                if (selectedCategories.length === 0) {
+                    btn.textContent = 'Category';
+                } else {
+                    btn.textContent = selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} Categories`;
+                }
+
+                // Filter issue cards
+                filterIssues();
+            });
+        });
+
+        // Status dropdown functionality
+        document.querySelectorAll('.dropdown-item[data-status]').forEach(item => {
+            item.addEventListener('click', function() {
+                const status = this.getAttribute('data-status');
+                const dropdown = this.closest('.dropdown');
+                const btn = dropdown.querySelector('.dropdown-btn');
+
+                // Toggle selection
+                if (selectedStatuses.includes(status)) {
+                    selectedStatuses = selectedStatuses.filter(s => s !== status);
+                    this.classList.remove('selected');
+                } else {
+                    selectedStatuses.push(status);
+                    this.classList.add('selected');
+                }
+
+                // Update dropdown button text
+                if (selectedStatuses.length === 0) {
+                    btn.textContent = 'Status';
+                } else {
+                    btn.textContent = selectedStatuses.length === 1 ? selectedStatuses[0] : `${selectedStatuses.length} Statuses`;
+                }
+
+                // Filter issue cards
+                filterIssues();
+            });
+        });
+
+        // Distance dropdown functionality
+        document.querySelectorAll('.dropdown-item[data-distance]').forEach(item => {
+            item.addEventListener('click', function() {
+                const distance = this.getAttribute('data-distance');
+                const dropdown = this.closest('.dropdown');
+                const btn = dropdown.querySelector('.dropdown-btn');
+
+                // Toggle selection
+                if (selectedDistances.includes(distance)) {
+                    selectedDistances = selectedDistances.filter(d => d !== distance);
+                    this.classList.remove('selected');
+                } else {
+                    selectedDistances.push(distance);
+                    this.classList.add('selected');
+                }
+
+                // Update dropdown button text
+                if (selectedDistances.length === 0) {
+                    btn.textContent = 'Distance';
+                } else {
+                    btn.textContent = selectedDistances.length === 1 ? selectedDistances[0] : `${selectedDistances.length} Distances`;
+                }
+
+                // Filter issue cards
+                filterIssues();
+            });
+        });
+
+        // Dropdown timeout functionality
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const content = dropdown.querySelector('.dropdown-content');
+            dropdown.addEventListener('mouseenter', () => {
+                clearTimeout(dropdownTimeout);
+                content.style.display = 'block';
+            });
+            dropdown.addEventListener('mouseleave', () => {
+                dropdownTimeout = setTimeout(() => {
+                    content.style.display = 'none';
+                }, 50); // 5 seconds delay
+            });
+            content.addEventListener('mouseenter', () => {
+                clearTimeout(dropdownTimeout);
+            });
+            content.addEventListener('mouseleave', () => {
+                dropdownTimeout = setTimeout(() => {
+                    content.style.display = 'none';
+                }, 50); // 5 seconds delay
+            });
+            // Retain click functionality
+            dropdown.querySelector('.dropdown-btn').addEventListener('click', () => {
+                clearTimeout(dropdownTimeout);
+                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-input');
+        const issueCards = document.querySelectorAll('.issue-card');
+
+        searchInput.addEventListener('input', function() {
+            filterIssues();
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+            }
+        });
+
+        // Filter issues based on category, status, distance, and search
+        function filterIssues() {
+            const searchTerm = searchInput.value.toLowerCase();
+
+            issueCards.forEach(card => {
+                const title = card.querySelector('.issue-title').textContent.toLowerCase();
+                const description = card.querySelector('.issue-description').textContent.toLowerCase();
+                const category = card.getAttribute('data-category');
+                const status = card.getAttribute('data-status');
+                const location = card.getAttribute('data-location').toLowerCase();
+                
+                const matchesSearch = title.includes(searchTerm) || 
+                                    description.includes(searchTerm) || 
+                                    location.includes(searchTerm);
+                const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(category);
+                const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(status);
+                const matchesDistance = selectedDistances.length === 0; // Note: Distance filtering not implemented in data
+                
+                card.style.display = matchesSearch && matchesCategory && matchesStatus && matchesDistance ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
